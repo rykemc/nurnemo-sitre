@@ -2,7 +2,7 @@
   "streamer": {
     "name": "NurNemo",
     "aliases": ["NurNemo_", "nurnemoo"],
-    "logo": "/assets/logo.png",
+    "logo": "favicon.svg",
     "language": "de-DE",
     "main_category": "Gaming",
     "primary_game": "Minecraft",

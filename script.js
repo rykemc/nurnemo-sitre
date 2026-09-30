@@ -4,6 +4,9 @@ const discordButton = document.querySelector('#discord-button');
 const themeButton = document.querySelector('#theme-toggle');
 const purpleButton = document.querySelector('#purple-toggle');
 const toast = document.querySelector('.toast');
+const privacyModal = document.querySelector('#privacy-modal');
+const privacyOpen = document.querySelector('#privacy-open');
+const privacyClose = document.querySelector('#privacy-close');
 const liveLabel = document.querySelector('.live-label');
 const streamCategory = document.querySelector('#stream-category');
 
@@ -98,7 +101,7 @@ async function loadStreamerData() {
     logo.remove();
     logoParent.textContent = streamer.name.charAt(0);
   }, { once: true });
-  logo.src = streamer.logo;
+  logo.src = new URL(streamer.logo, document.baseURI).href;
   document.querySelector('.eyebrow').lastChild.textContent = ` ${twitchUrl.replace('https://www.twitch.tv/', 'twitch.tv/')}`;
   document.querySelector('#hero-description').textContent = `${streamer.primary_game}, Multiplayer-Projekte und die Sorte Abende, aus denen Clips entstehen.`;
   document.querySelector('#hero-language').textContent = streamer.language === 'de-DE' ? 'DE' : streamer.language;
@@ -247,6 +250,24 @@ clipModal.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeClip();
 });
+
+function closePrivacy() {
+  privacyModal.classList.remove('open');
+  privacyModal.setAttribute('aria-hidden', 'true');
+}
+
+privacyOpen.addEventListener('click', () => {
+  privacyModal.classList.add('open');
+  privacyModal.setAttribute('aria-hidden', 'false');
+  privacyClose.focus();
+});
+privacyClose.addEventListener('click', closePrivacy);
+privacyModal.addEventListener('click', (event) => {
+  if (event.target === privacyModal) closePrivacy();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closePrivacy();
+});
   renderClips();
 
 const soundFiles = {
@@ -275,4 +296,37 @@ document.querySelectorAll('.copy-command').forEach((button) => {
     button.textContent = 'Kopiert!';
     window.setTimeout(() => { button.textContent = originalLabel; }, 1400);
   });
+});
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const input = document.createElement('textarea');
+  input.value = text;
+  input.setAttribute('readonly', '');
+  input.style.position = 'fixed';
+  input.style.opacity = '0';
+  document.body.appendChild(input);
+  input.select();
+  const copied = document.execCommand('copy');
+  input.remove();
+  if (!copied) throw new Error('Clipboard unavailable');
+}
+
+document.querySelector('#copy-discord').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  const originalLabel = button.textContent;
+  try {
+    await copyText(button.dataset.copy);
+    button.textContent = 'Kopiert! ✓';
+    button.classList.add('copied');
+  } catch {
+    button.textContent = 'Nicht möglich';
+  }
+  window.setTimeout(() => {
+    button.textContent = originalLabel;
+    button.classList.remove('copied');
+  }, 1800);
 });
