@@ -1,14 +1,23 @@
 const menuButton = document.querySelector('.menu-toggle');
 const mobileNav = document.querySelector('.mobile-nav');
 const discordButton = document.querySelector('#discord-button');
-const themeButton = document.querySelector('#theme-toggle');
-const purpleButton = document.querySelector('#purple-toggle');
 const toast = document.querySelector('.toast');
 const privacyModal = document.querySelector('#privacy-modal');
 const privacyOpen = document.querySelector('#privacy-open');
+const headerPrivacyOpen = document.querySelector('#header-privacy-open');
+const mobilePrivacyOpen = document.querySelector('#mobile-privacy-open');
 const privacyClose = document.querySelector('#privacy-close');
 const liveLabel = document.querySelector('.live-label');
 const streamCategory = document.querySelector('#stream-category');
+
+document.querySelectorAll('.brand-mark img').forEach((logo) => {
+  logo.addEventListener('error', () => {
+    const logoParent = logo.parentElement;
+    logo.remove();
+    logoParent.classList.add('logo-fallback');
+    logoParent.textContent = 'N';
+  }, { once: true });
+});
 
 let twitchPlayer;
 
@@ -34,13 +43,6 @@ function updateTwitchEmbeds(channel) {
   });
 }
 
-const savedTheme = localStorage.getItem('nurnemo-theme') || 'dark';
-const activeTheme = ['dark', 'light', 'purple'].includes(savedTheme) ? savedTheme : 'dark';
-document.documentElement.dataset.theme = activeTheme;
-themeButton.setAttribute('aria-pressed', String(activeTheme !== 'light' && activeTheme !== 'purple'));
-themeButton.querySelector('.theme-icon').textContent = activeTheme === 'light' ? '☾' : '☼';
-purpleButton.setAttribute('aria-pressed', String(activeTheme === 'purple'));
-
 menuButton.addEventListener('click', () => {
   const isOpen = mobileNav.classList.toggle('open');
   menuButton.setAttribute('aria-expanded', String(isOpen));
@@ -62,24 +64,6 @@ document.querySelectorAll('.mobile-nav a').forEach((link) => {
   });
 });
 
-themeButton.addEventListener('click', () => {
-  const nextTheme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-  document.documentElement.dataset.theme = nextTheme;
-  localStorage.setItem('nurnemo-theme', nextTheme);
-  themeButton.setAttribute('aria-pressed', String(nextTheme !== 'light'));
-  themeButton.querySelector('.theme-icon').textContent = nextTheme === 'light' ? '☾' : '☼';
-  purpleButton.setAttribute('aria-pressed', 'false');
-});
-
-purpleButton.addEventListener('click', () => {
-  const nextTheme = document.documentElement.dataset.theme === 'purple' ? 'dark' : 'purple';
-  document.documentElement.dataset.theme = nextTheme;
-  localStorage.setItem('nurnemo-theme', nextTheme);
-  themeButton.setAttribute('aria-pressed', String(nextTheme === 'dark'));
-  themeButton.querySelector('.theme-icon').textContent = '☼';
-  purpleButton.setAttribute('aria-pressed', String(nextTheme === 'purple'));
-});
-
 discordButton.addEventListener('click', () => {
   toast.classList.add('visible');
   window.setTimeout(() => toast.classList.remove('visible'), 2600);
@@ -96,27 +80,16 @@ async function loadStreamerData() {
     brandName.textContent = streamer.name;
   });
   const logo = document.querySelector('#brand-logo');
-  logo.addEventListener('error', () => {
-    const logoParent = logo.parentElement;
-    logo.remove();
-    logoParent.textContent = streamer.name.charAt(0);
-  }, { once: true });
   logo.src = new URL(streamer.logo, document.baseURI).href;
   document.querySelector('.eyebrow').lastChild.textContent = ` ${twitchUrl.replace('https://www.twitch.tv/', 'twitch.tv/')}`;
   document.querySelector('#hero-description').textContent = `${streamer.primary_game}, Multiplayer-Projekte und die Sorte Abende, aus denen Clips entstehen.`;
   document.querySelector('#hero-language').textContent = streamer.language === 'de-DE' ? 'DE' : streamer.language;
   document.querySelector('#hero-game').textContent = streamer.primary_game;
   document.querySelector('#stream-category').textContent = `${streamer.primary_game.toUpperCase()} / ONLINE`;
-  document.querySelector('#header-twitch').href = twitchUrl;
   document.querySelector('#hero-twitch').href = twitchUrl;
   document.querySelector('#hero-youtube').href = youtubeUrl;
   document.querySelector('#schedule-twitch').href = twitchUrl;
   document.querySelector('#secondary-twitch').href = streamer.social_media.twitch.secondary_channel_24_7;
-  document.querySelector('#footer-twitch').href = twitchUrl;
-  document.querySelector('#footer-youtube-main').href = youtubeUrl;
-  document.querySelector('#footer-tiktok').href = streamer.social_media.tiktok;
-  document.querySelector('#footer-youtube-second').href = streamer.social_media.youtube.second_channel.url;
-  document.querySelector('#footer-youtube-shorts').href = streamer.social_media.youtube.shorts_channel.url;
 
   const focusTicker = document.querySelector('#focus-ticker');
   focusTicker.innerHTML = '';
@@ -208,15 +181,80 @@ const clipModal = document.querySelector('#clip-modal');
 const clipFrame = document.querySelector('#clip-frame');
 const clipModalTitle = document.querySelector('#clip-modal-title');
 
+function getClipHost() {
+  return window.location.hostname || 'localhost';
+}
+
+function getYouTubeEmbedUrl(source) {
+  try {
+    const url = new URL(source);
+    if (!url.hostname.includes('youtube.com') && !url.hostname.includes('youtu.be')) return source;
+    const shortsMatch = url.pathname.match(/\/shorts\/([^/]+)/);
+    const embedMatch = url.pathname.match(/\/embed\/([^/]+)/);
+    const watchId = url.searchParams.get('v');
+    const videoId = shortsMatch?.[1] || embedMatch?.[1] || watchId || (url.hostname === 'youtu.be' ? url.pathname.slice(1) : '');
+    if (!videoId) return source;
+    return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
+  } catch {
+    return source;
+  }
+}
+
+function getClipEmbedUrl(source) {
+  const normalizedSource = getYouTubeEmbedUrl(source || '');
+  if (!normalizedSource.includes('twitch.tv')) return normalizedSource;
+  try {
+    const url = new URL(normalizedSource);
+    const clipMatch = url.pathname.match(/\/clip\/([^/]+)/) || url.hostname === 'clips.twitch.tv' && url.pathname.match(/\/([^/]+)/);
+    const clipSlug = url.searchParams.get('clip') || clipMatch?.[1];
+    if (!clipSlug) return normalizedSource;
+    return `https://clips.twitch.tv/embed?clip=${encodeURIComponent(clipSlug)}&parent=${encodeURIComponent(getClipHost())}`;
+  } catch {
+    return normalizedSource;
+  }
+}
+
+function getFallbackEmbedUrl(clip) {
+  return getYouTubeEmbedUrl(clip.fallback_embed_url || clip.youtube_shorts_url || clip.youtube_url || '');
+}
+
+function setClipAspect(element, source) {
+  element.classList.toggle('is-vertical', /youtube\.com\/shorts\//.test(source) || element.dataset.vertical === 'true');
+}
+
+function loadClipFrame(frame, clip, source, allowFallback = true) {
+  const fallbackUrl = getFallbackEmbedUrl(clip);
+  const embedUrl = getClipEmbedUrl(source);
+  const useFallback = !fallbackUrl || embedUrl === fallbackUrl;
+  const isTwitchClip = embedUrl.includes('clips.twitch.tv/embed');
+  let fallbackTimer;
+  frame.parentElement.dataset.vertical = String(clip.format === 'vertical' || clip.is_short === true);
+  frame.onerror = () => {
+    if (allowFallback && fallbackUrl && !useFallback) {
+      window.clearTimeout(fallbackTimer);
+      frame.classList.add('is-fallback');
+      setClipAspect(frame.parentElement, fallbackUrl);
+      frame.src = fallbackUrl;
+    }
+  };
+  if (isTwitchClip && allowFallback && fallbackUrl && !useFallback) {
+    fallbackTimer = window.setTimeout(() => {
+      frame.dispatchEvent(new Event('error'));
+    }, 10000);
+  }
+  setClipAspect(frame.parentElement, source);
+  frame.src = embedUrl;
+}
+
 function renderClips(filter = 'popular') {
   clipsGrid.innerHTML = '';
   clips.filter((clip) => filter === 'popular' || clip.platform.toLowerCase() === 'youtube').forEach((clip) => {
     const card = document.createElement('article');
     card.className = 'clip-card';
-    card.innerHTML = `<div class="clip-embed"><iframe title="" src="" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><div class="clip-card-copy"><strong></strong><small></small></div>`;
+    card.innerHTML = `<div class="clip-embed"><iframe class="clip-player" title="" src="" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><div class="clip-card-copy"><strong></strong><small></small></div>`;
     const frame = card.querySelector('iframe');
     frame.title = clip.title;
-    frame.src = clip.embed_url;
+    loadClipFrame(frame, clip, clip.twitch_embed_url || clip.embed_url);
     card.querySelector('strong').textContent = clip.title;
     card.querySelector('small').textContent = clip.platform;
     clipsGrid.appendChild(card);
@@ -224,9 +262,9 @@ function renderClips(filter = 'popular') {
 }
 
 function openClip(clip) {
-  const parent = window.location.hostname || 'localhost';
   clipModalTitle.textContent = clip.title;
-  clipFrame.src = `${clip.embed_url}${clip.embed_url.includes('?') ? '&' : '?'}parent=${encodeURIComponent(parent)}`;
+  clipFrame.classList.remove('is-fallback');
+  loadClipFrame(clipFrame, clip, clip.twitch_embed_url || clip.embed_url);
   clipModal.classList.add('open');
   clipModal.setAttribute('aria-hidden', 'false');
 }
@@ -234,6 +272,7 @@ function openClip(clip) {
 function closeClip() {
   clipModal.classList.remove('open');
   clipModal.setAttribute('aria-hidden', 'true');
+  clipFrame.classList.remove('is-fallback');
   clipFrame.src = '';
 }
 
@@ -261,6 +300,16 @@ privacyOpen.addEventListener('click', () => {
   privacyModal.setAttribute('aria-hidden', 'false');
   privacyClose.focus();
 });
+[headerPrivacyOpen, mobilePrivacyOpen].forEach((button) => {
+  button.addEventListener('click', () => {
+    privacyModal.classList.add('open');
+    privacyModal.setAttribute('aria-hidden', 'false');
+    privacyClose.focus();
+    mobileNav.classList.remove('open');
+    menuButton.setAttribute('aria-expanded', 'false');
+    menuButton.textContent = 'Menü';
+  });
+});
 privacyClose.addEventListener('click', closePrivacy);
 privacyModal.addEventListener('click', (event) => {
   if (event.target === privacyModal) closePrivacy();
@@ -275,17 +324,56 @@ const soundFiles = {
   rage: 'assets/sounds/rage.mp3',
   scream: 'assets/sounds/scream.mp3'
 };
+let soundUserInteraction = false;
+window.addEventListener('pointerdown', () => { soundUserInteraction = true; }, { once: true, passive: true });
+window.addEventListener('keydown', () => { soundUserInteraction = true; }, { once: true });
+
+function showSoundMessage(message) {
+  toast.textContent = message;
+  toast.classList.add('visible');
+  window.setTimeout(() => toast.classList.remove('visible'), 1800);
+}
+
+function markSoundUnavailable(button) {
+  button.classList.remove('playing');
+  button.classList.add('sound-unavailable');
+  button.disabled = true;
+  button.setAttribute('aria-disabled', 'true');
+  button.querySelector('.sound-status').textContent = '×';
+  button.querySelector('.sound-status').setAttribute('aria-label', 'Sound-Datei nicht verfügbar');
+}
+
 document.querySelectorAll('.sound-button').forEach((button) => {
-  button.addEventListener('click', () => {
+  button.addEventListener('click', async (event) => {
+    if (!soundUserInteraction && !event.isTrusted) return;
+    soundUserInteraction = true;
+    if (button.disabled) return;
     button.classList.remove('playing');
     void button.offsetWidth;
     button.classList.add('playing');
-    const sound = new Audio(soundFiles[button.dataset.sound]);
-    sound.play().catch(() => {
-      toast.textContent = 'Sound-Datei noch nicht hochgeladen.';
-      toast.classList.add('visible');
-      window.setTimeout(() => toast.classList.remove('visible'), 1800);
-    });
+
+    let handledError = false;
+    const handleError = () => {
+      if (handledError) return;
+      handledError = true;
+      markSoundUnavailable(button);
+      showSoundMessage('Sound-Datei noch nicht hochgeladen.');
+    };
+
+    try {
+      const sound = new Audio();
+      sound.preload = 'none';
+      sound.addEventListener('error', handleError, { once: true });
+      sound.src = soundFiles[button.dataset.sound];
+      await sound.play();
+    } catch (error) {
+      if (error?.name === 'NotAllowedError') {
+        button.classList.remove('playing');
+        showSoundMessage('Sound bitte direkt über den Button starten.');
+      } else {
+        handleError();
+      }
+    }
   });
 });
 
