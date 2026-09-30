@@ -1,0 +1,96 @@
+{
+  "streamer": {
+    "name": "NurNemo",
+    "aliases": ["NurNemo_", "nurnemoo"],
+    "logo": "/assets/logo.png",
+    "language": "de-DE",
+    "main_category": "Gaming",
+    "primary_game": "Minecraft",
+    "social_media": {
+      "twitch": {
+        "main_channel": "https://www.twitch.tv/nurnemo",
+        "secondary_channel_24_7": "https://www.twitch.tv/nurnemo24"
+      },
+      "youtube": {
+        "main_channel": {
+          "name": "NurNemo",
+          "handle": "@nurnemoo",
+          "url": "https://www.youtube.com/@nurnemoo"
+        },
+        "second_channel": {
+          "handle": "@nurnemo2",
+          "url": "https://www.youtube.com/@nurnemo2"
+        },
+        "shorts_channel": {
+          "handle": "@nurnemoshorts",
+          "url": "https://www.youtube.com/@nurnemoshorts"
+        }
+      },
+      "instagram": "https://www.instagram.com/nurnemottv",
+      "tiktok": "https://www.tiktok.com/@nurnemo.clips",
+      "discord": "https://discord.com/invite/y5c7A6BCAt"
+    },
+    "content_focus": [
+      "Minecraft Survival Multiplayer (SMP)",
+      "Minecraft Challenges (z.B. mit Voicechanger)",
+      "Bedwars & Skywars",
+      "Minecraft Rollenspiel & Großprojekte"
+    ],
+    "known_projects": [
+      "Minecraft Egoist",
+      "Craftcore",
+      "Minecraft Helden 3",
+      "Craft Attack Newcomer",
+      "WindSMP",
+      "HeldenInsel",
+      "HugoSMP"
+    ],
+    "frequent_collaborators": [
+      "Minooo99_",
+      "NywoYT",
+      "Blackcheck",
+      "Jerome",
+      "Stachliger",
+      "hvnncs",
+      "Melvin501"
+    ],
+    "setup": {
+      "keyboard": "Wooting 80HE",
+      "mouse": "Logitech G Pro X Superlight"
+    },
+    "team": {
+      "cutter": "@taviootv",
+      "thumbnail": "@iamsimi09"
+    },
+    "community": {
+      "discord_invite": "https://discord.com/invite/y5c7A6BCAt",
+      "description": "Tritt der offiziellen Community bei für Stream-Ankündigungen, Event-Planungen und direkten Austausch."
+    },
+    "faq": [
+      {
+        "question": "Welche Tastatur und Maus nutzt NurNemo?",
+        "answer": "Als Tastatur kommt die Wooting 80HE zum Einsatz, kombiniert mit der Logitech G Pro X Superlight Maus."
+      },
+      {
+        "question": "Wo finde ich den Discord-Server?",
+        "answer": "Über den Einladungslink https://discord.com/invite/y5c7A6BCAt gelangst du direkt auf den Server."
+      },
+      {
+        "question": "Wer schneidet die Videos und erstellt die Thumbnails?",
+        "answer": "Der Videoschnitt stammt von @taviootv, während die Thumbnails von @iamsimi09 gestaltet werden."
+      }
+    ],
+    "clips": [
+      {
+        "title": "Minecraft Helden 3 Bewerbung",
+        "platform": "YouTube",
+        "embed_url": "https://www.youtube.com/embed/EeW6rCL_Ic0"
+      },
+      {
+        "title": "Minecraft mit Voicechanger",
+        "platform": "YouTube",
+        "embed_url": "https://www.youtube.com/embed/IlnfBXpLI6Y"
+      }
+    ]
+  }
+}

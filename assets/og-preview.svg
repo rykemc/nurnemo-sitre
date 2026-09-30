@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0b0d0f"/>
+  <circle cx="970" cy="110" r="280" fill="#ff5d57" opacity=".8"/>
+  <circle cx="1050" cy="520" r="250" fill="#d7ff3f" opacity=".9"/>
+  <text x="82" y="145" fill="#d7ff3f" font-family="Arial, sans-serif" font-size="24" font-weight="bold" letter-spacing="6">TWITCH CREATOR / MINECRAFT</text>
+  <text x="78" y="350" fill="#f3f1ea" font-family="Arial, sans-serif" font-size="132" font-weight="bold">NurNemo</text>
+  <text x="86" y="420" fill="#f3f1ea" font-family="Arial, sans-serif" font-size="34">Multiplayer-Projekte &amp; Chaos live auf Twitch.</text>
+  <text x="86" y="542" fill="#0b0d0f" font-family="Arial, sans-serif" font-size="25" font-weight="bold">nurnemo.top</text>
+</svg>
