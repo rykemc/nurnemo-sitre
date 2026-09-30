@@ -109,7 +109,7 @@ async function loadStreamerData() {
   streamer.known_projects.forEach((project, index) => {
     const card = document.createElement('article');
     card.className = 'project-card';
-    card.innerHTML = `<span class="project-number">0${index + 1}</span><strong></strong><span class="project-type">${project.toLowerCase().includes('bewerbung') ? 'application / upcoming' : 'minecraft / project'}</span>`;
+    card.innerHTML = `<span class="project-number">0${index + 1}</span><strong></strong><span class="project-type">${project.toLowerCase().includes('bewerbung') ? 'Bewerbung / bald' : 'Minecraft / Projekt'}</span>`;
     card.querySelector('strong').textContent = project;
     projectGrid.appendChild(card);
   });
@@ -180,6 +180,7 @@ const clipsGrid = document.querySelector('#clips-grid');
 const clipModal = document.querySelector('#clip-modal');
 const clipFrame = document.querySelector('#clip-frame');
 const clipModalTitle = document.querySelector('#clip-modal-title');
+const youtubeShortsFallback = 'https://www.youtube.com/@ryke_minecraft/shorts';
 
 function getClipHost() {
   return window.location.hostname || 'localhost';
@@ -215,7 +216,7 @@ function getClipEmbedUrl(source) {
 }
 
 function getFallbackEmbedUrl(clip) {
-  return getYouTubeEmbedUrl(clip.fallback_embed_url || clip.youtube_shorts_url || clip.youtube_url || '');
+  return getYouTubeEmbedUrl(clip.fallback_embed_url || clip.youtube_shorts_url || clip.youtube_url || youtubeShortsFallback);
 }
 
 function setClipAspect(element, source) {
@@ -224,7 +225,7 @@ function setClipAspect(element, source) {
 
 function loadClipFrame(frame, clip, source, allowFallback = true) {
   const fallbackUrl = getFallbackEmbedUrl(clip);
-  const embedUrl = getClipEmbedUrl(source);
+  const embedUrl = getClipEmbedUrl(source || fallbackUrl);
   const useFallback = !fallbackUrl || embedUrl === fallbackUrl;
   const isTwitchClip = embedUrl.includes('clips.twitch.tv/embed');
   let fallbackTimer;
