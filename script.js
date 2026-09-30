@@ -74,6 +74,7 @@ async function loadStreamerData() {
   const data = window.location.protocol === 'file:' && inlineData
     ? JSON.parse(inlineData.textContent)
     : await (await fetch('data.json')).json();
+  await Promise.resolve();
   const { streamer } = data;
   const twitchUrl = streamer.social_media.twitch.main_channel;
   const youtubeUrl = streamer.social_media.youtube.main_channel.url;
@@ -161,6 +162,12 @@ async function loadStreamerData() {
 
   clips = streamer.clips || [];
   renderClips();
+  loadLatestNurnemoShorts().then((shorts) => {
+    if (shorts.length) {
+      clips = shorts;
+      renderClips();
+    }
+  }).catch(() => {});
 
   updateTwitchEmbeds(twitchUrl.split('/').filter(Boolean).pop() || 'nurnemo');
 }
@@ -184,6 +191,62 @@ const clipModal = document.querySelector('#clip-modal');
 const clipFrame = document.querySelector('#clip-frame');
 const clipModalTitle = document.querySelector('#clip-modal-title');
 const youtubeShortsFallback = 'https://www.youtube.com/@ryke_minecraft/shorts';
+const youtubeApiKey = 'AIzaSyBDKHOtuv995FKBL245CKX3TRzwsMDawPc';
+const youtubeChannelHandle = '@ryke_minecraft';
+
+function parseYouTubeDuration(duration) {
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return Infinity;
+  return Number(match[1] || 0) * 3600 + Number(match[2] || 0) * 60 + Number(match[3] || 0);
+}
+
+async function loadLatestNurnemoShorts() {
+  const query = new URLSearchParams({
+    part: 'id',
+    forHandle: youtubeChannelHandle,
+    key: youtubeApiKey
+  });
+  const channelResponse = await fetch(`https://www.googleapis.com/youtube/v3/channels?${query}`);
+  if (!channelResponse.ok) return [];
+  const channelData = await channelResponse.json();
+  const channelId = channelData.items?.[0]?.id;
+  if (!channelId) return [];
+
+  const searchQuery = new URLSearchParams({
+    part: 'snippet',
+    channelId,
+    order: 'date',
+    maxResults: '25',
+    type: 'video',
+    key: youtubeApiKey
+  });
+  const searchResponse = await fetch(`https://www.googleapis.com/youtube/v3/search?${searchQuery}`);
+  if (!searchResponse.ok) return [];
+  const searchData = await searchResponse.json();
+  const videoIds = searchData.items?.map((item) => item.id.videoId).filter(Boolean) || [];
+  if (!videoIds.length) return [];
+
+  const videosQuery = new URLSearchParams({
+    part: 'snippet,contentDetails',
+    id: videoIds.join(','),
+    key: youtubeApiKey
+  });
+  const videosResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?${videosQuery}`);
+  if (!videosResponse.ok) return [];
+  const videosData = await videosResponse.json();
+  const shorts = videosData.items?.filter((video) => parseYouTubeDuration(video.contentDetails?.duration || '') <= 60) || [];
+  const taggedShorts = shorts.filter((video) => {
+    const text = `${video.snippet?.title || ''} ${video.snippet?.description || ''}`.toLowerCase();
+    return text.includes('@nurnemo') || text.includes('nurnemo');
+  });
+  return (taggedShorts.length ? taggedShorts : shorts).slice(0, 6).map((video) => ({
+    title: video.snippet.title,
+    platform: 'YouTube Shorts',
+    embed_url: `https://www.youtube.com/embed/${video.id}`,
+    format: 'vertical',
+    youtube_shorts_url: `https://www.youtube.com/shorts/${video.id}`
+  }));
+}
 
 function getClipHost() {
   return window.location.hostname || 'localhost';
