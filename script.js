@@ -70,8 +70,11 @@ discordButton.addEventListener('click', () => {
 });
 
 async function loadStreamerData() {
-  const response = await fetch('data.json');
-  const { streamer } = await response.json();
+  const inlineData = document.querySelector('#streamer-data');
+  const data = window.location.protocol === 'file:' && inlineData
+    ? JSON.parse(inlineData.textContent)
+    : await (await fetch('data.json')).json();
+  const { streamer } = data;
   const twitchUrl = streamer.social_media.twitch.main_channel;
   const youtubeUrl = streamer.social_media.youtube.main_channel.url;
 
@@ -319,64 +322,6 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closePrivacy();
 });
   renderClips();
-
-const soundFiles = {
-  voicechanger: 'assets/sounds/voicechanger.mp3',
-  rage: 'assets/sounds/rage.mp3',
-  scream: 'assets/sounds/scream.mp3'
-};
-let soundUserInteraction = false;
-window.addEventListener('pointerdown', () => { soundUserInteraction = true; }, { once: true, passive: true });
-window.addEventListener('keydown', () => { soundUserInteraction = true; }, { once: true });
-
-function showSoundMessage(message) {
-  toast.textContent = message;
-  toast.classList.add('visible');
-  window.setTimeout(() => toast.classList.remove('visible'), 1800);
-}
-
-function markSoundUnavailable(button) {
-  button.classList.remove('playing');
-  button.classList.add('sound-unavailable');
-  button.disabled = true;
-  button.setAttribute('aria-disabled', 'true');
-  button.querySelector('.sound-status').textContent = '×';
-  button.querySelector('.sound-status').setAttribute('aria-label', 'Sound-Datei nicht verfügbar');
-}
-
-document.querySelectorAll('.sound-button').forEach((button) => {
-  button.addEventListener('click', async (event) => {
-    if (!soundUserInteraction && !event.isTrusted) return;
-    soundUserInteraction = true;
-    if (button.disabled) return;
-    button.classList.remove('playing');
-    void button.offsetWidth;
-    button.classList.add('playing');
-
-    let handledError = false;
-    const handleError = () => {
-      if (handledError) return;
-      handledError = true;
-      markSoundUnavailable(button);
-      showSoundMessage('Sound-Datei noch nicht hochgeladen.');
-    };
-
-    try {
-      const sound = new Audio();
-      sound.preload = 'none';
-      sound.addEventListener('error', handleError, { once: true });
-      sound.src = soundFiles[button.dataset.sound];
-      await sound.play();
-    } catch (error) {
-      if (error?.name === 'NotAllowedError') {
-        button.classList.remove('playing');
-        showSoundMessage('Sound bitte direkt über den Button starten.');
-      } else {
-        handleError();
-      }
-    }
-  });
-});
 
 document.querySelectorAll('.copy-command').forEach((button) => {
   button.addEventListener('click', async () => {
